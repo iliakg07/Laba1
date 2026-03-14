@@ -6,15 +6,15 @@ public final class RunResult {
     private long id;
     // К какому запуску относится (id запуска).
     // Должен ссылаться на реально существующий Run.
-    private long runId;
+    public long runId;
     // Что измеряли (PH/CONDUCTIVITY/NITRATE...). Выбирается из списка MeasurementParam.
-    private MeasurementParam param;
+    public MeasurementParam param;
     // Числовое значение результата.
     private double value;
     // Единицы (например "mg/L"). Нельзя пустое. До 16 символов.
-    private String unit;
+    public String unit;
     // Комментарий (например “after 60 min”). Можно пусто. До 128 символов.
-    private String comment;
+    public String comment;
     // Когда добавили результат. Программа ставит автоматически.
     private Instant createdAt;
 }
