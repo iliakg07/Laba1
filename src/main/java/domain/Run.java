@@ -7,12 +7,52 @@ public final class Run {
     private long id;
     // К какому эксперименту относится (id эксперимента).
     // Должен ссылаться на реально существующий Experiment.
-    public long experimentId;
+    private long experimentId;
     // Название запуска reminder: “Run-2026-02-03-A”. Нельзя пустое. До 128 символов.
-    public String name;
+    private String name;
     // Кто выполнял запуск (логин или имя). Нельзя пустое. До 64 символов.
-    public String operatorName;
+    private String operatorName;
     // Когда запуск зарегистрирован. Программа ставит автоматически.
     private Instant createdAt;
+
+    public Run(long id, long experimentId, String name, String operatorName, Instant createdAt) {
+        this.id = id;
+        this.experimentId = experimentId;
+        this.name = name;
+        this.operatorName = operatorName;
+        this.createdAt = createdAt;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public long getExperimentId() {
+        return experimentId;
+    }
+
+    public void setExperimentId(long experimentId) {
+        this.experimentId = experimentId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getOperatorName() {
+        return operatorName;
+    }
+
+    public void setOperatorName(String operatorName) {
+        this.operatorName = operatorName;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 }
 
