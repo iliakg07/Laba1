@@ -7,11 +7,11 @@ public final class Run {
     private long id;
     // К какому эксперименту относится (id эксперимента).
     // Должен ссылаться на реально существующий Experiment.
-    private long experimentId;
+    public long experimentId;
     // Название запуска reminder: “Run-2026-02-03-A”. Нельзя пустое. До 128 символов.
-    private String name;
+    public String name;
     // Кто выполнял запуск (логин или имя). Нельзя пустое. До 64 символов.
-    private String operatorName;
+    public String operatorName;
     // Когда запуск зарегистрирован. Программа ставит автоматически.
     private Instant createdAt;
 }
