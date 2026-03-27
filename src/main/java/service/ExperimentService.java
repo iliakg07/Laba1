@@ -4,7 +4,8 @@ import domain.Experiment;
 import util.IdGenerator;
 import validation.ExperimentValidator;
 import validation.ValidationException;
-
+import java.util.Collection;
+import java.util.List;
 import java.util.TreeMap;
 
 public class ExperimentService {
@@ -39,5 +40,9 @@ public class ExperimentService {
         }
 
         return exp;
+    }
+
+    public Collection<Experiment> list() {
+        return List.copyOf(experiments.values()); // возвращаем копию, чтобы никак нельзя было извне поменять оригинал
     }
 }
