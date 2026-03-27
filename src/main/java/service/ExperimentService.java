@@ -39,7 +39,6 @@ public class ExperimentService {
         if (exp == null) {
             throw new ValidationException("Experiment not found with id - " + id);
         }
-
         return exp;
     }
 
