@@ -8,11 +8,15 @@ public class RunResultValidator {
             throw new ValidationException("Invalid runId");
         }
 
+        if (result.getValue() < 0) {
+            throw new ValidationException("Value can't be less than 0");
+        }
+
         if (result.getParam() == null) {
             throw new ValidationException("Measurement param is required");
         }
 
-        if (result.getUnit() == null) {
+        if (result.getUnit() == null || result.getUnit().isBlank()) {
             throw new ValidationException("Unit cannot be empty");
         }
 
