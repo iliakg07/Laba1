@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class IdGeneratorTest {
 
-//    Тестим, генерирует ли метод последовательные айди
+//  Тестим, генерирует ли метод последовательные айди
 
     @Test
     void shouldGenerateSequentialIds() {

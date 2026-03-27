@@ -45,4 +45,13 @@ public class ExperimentService {
     public Collection<Experiment> list() {
         return List.copyOf(experiments.values()); // возвращаем копию, чтобы никак нельзя было извне поменять оригинал
     }
+
+    public void remove(long id) {
+        if (!experiments.containsKey(id)) {
+            throw new ValidationException("Experiment with id - " + id + " doesn't exist");
+        }
+//        если эксперимента с таким номером НЕТ - кидаем исключение
+
+        experiments.remove(id);
+    }
 }

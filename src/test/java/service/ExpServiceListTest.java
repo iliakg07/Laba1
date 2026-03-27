@@ -1,11 +1,10 @@
-package util;
+package service;
 
 import org.junit.jupiter.api.Test;
-import service.ExperimentService;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ExpServiceListTest {
-// проверяем что метод list возвращает все эксперименты в коллекции
+// Проверяем что метод list возвращает все эксперименты в коллекции
     @Test
     void listShouldReturnAllExperiments() {
         ExperimentService service = new ExperimentService();
