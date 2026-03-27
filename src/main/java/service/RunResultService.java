@@ -60,4 +60,32 @@ public class RunResultService {
         }
         results.remove(id);
     }
+
+    public RunResult update(long id,
+                            MeasurementParam param,
+                            double value,
+                            String unit,
+                            String comment) {
+
+        RunResult result = getById(id);
+
+        RunResult temp = new RunResult(
+                result.getId(),
+                result.getRunId(),
+                param,
+                value,
+                unit,
+                comment,
+                result.getCreatedAt()
+        );
+
+        RunResultValidator.validate(temp);
+
+        result.setParam(param);
+        result.setValue(value);
+        result.setUnit(unit);
+        result.setComment(comment);
+
+        return result;
+    }
 }
