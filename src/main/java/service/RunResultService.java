@@ -4,8 +4,11 @@ import domain.MeasurementParam;
 import domain.RunResult;
 import util.IdGenerator;
 import validation.RunResultValidator;
+import validation.ValidationException;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 import java.util.TreeMap;
 
 public class RunResultService {
@@ -35,6 +38,26 @@ public class RunResultService {
         RunResultValidator.validate(result);
         results.put(id, result);
         return result;
+    }
 
+    public RunResult getById(long id) {
+        RunResult result = results.get(id);
+
+        if (result == null) {
+            throw new ValidationException("RunResult with id " + id + " not found");
+        }
+        return result;
+    }
+
+    public Collection<RunResult> list() {
+        return List.copyOf(results.values());
+    }
+
+    public void remove(long id) {
+
+        if (!results.containsKey(id)) {
+            throw new ValidationException("RunResult with id " + id + " not found");
+        }
+        results.remove(id);
     }
 }
