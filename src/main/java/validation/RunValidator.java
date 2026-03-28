@@ -16,7 +16,7 @@ public class RunValidator {
             throw new ValidationException("Run name too long");
         }
 
-        if (run.getOperatorName() == null) {
+        if (run.getOperatorName() == null || run.getOperatorName().isBlank()) {
             throw new ValidationException("Operator name cannot be empty");
         }
 

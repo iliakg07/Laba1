@@ -18,7 +18,7 @@ public class ExperimentValidator {
             throw new ValidationException("Description too long");
         }
 
-        if (exp.getOwnerUsername() == null) {
+        if (exp.getOwnerUsername() == null || exp.getOwnerUsername().isBlank()) {
             throw new ValidationException("Owner username cannot be empty");
         }
     }
