@@ -11,9 +11,9 @@ class IdGeneratorTest {
     void shouldGenerateSequentialIds() {
         IdGenerator generator = new IdGenerator();
 
-        long id1 = generator.next();
-        long id2 = generator.next();
-        long id3 = generator.next();
+        long id1 = generator.generateId();
+        long id2 = generator.generateId();
+        long id3 = generator.generateId();
 
         assertEquals(1, id1);
         assertEquals(2, id2);
