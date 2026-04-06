@@ -1,5 +1,7 @@
 package domain;
 
+import util.IdGenerator;
+import validation.ValidationException;
 import java.time.Instant;
 
 public final class Run {
@@ -14,43 +16,66 @@ public final class Run {
     private String operatorName;
     // Когда запуск зарегистрирован. Программа ставит автоматически.
     private final Instant createdAt;
+    private Instant updatedAt;
 
-    public Run(long id, long experimentId, String name, String operatorName, Instant createdAt) {
-        this.id = id;
+    public Run(long experimentId, String name, String operatorName) {
+        IdGenerator idGenerator = new IdGenerator();
+        this.id = idGenerator.generateId();
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+
+        validateExperimentId(experimentId);
+        validateName(name);
+        validateOperatorName(operatorName);
+
         this.experimentId = experimentId;
         this.name = name;
         this.operatorName = operatorName;
-        this.createdAt = createdAt;
+    }
+
+    private static void validateExperimentId(long experimentId) {
+        if (experimentId <= 0)
+            throw new ValidationException("Experiment ID must be positive");
+    }
+
+    private static void validateName(String name) {
+        if (name == null || name.isBlank())
+            throw new ValidationException("Run name can't be empty");
+        if (name.length() > 128)
+            throw new ValidationException("Run name too long");
+    }
+
+    private static void validateOperatorName(String operatorName) {
+        if (operatorName == null || operatorName.isBlank())
+            throw new ValidationException("Operator Name can't be empty");
+        if (operatorName.length() > 64)
+            throw new ValidationException("Operator name too long");
+    }
+
+    public void setName(String name) {
+        validateName(name);
+        this.name = name;
+        this.updatedAt = Instant.now();
+    }
+
+    public void setOperatorName(String operatorName) {
+        validateOperatorName(operatorName);
+        this.operatorName = operatorName;
+        this.updatedAt = Instant.now();
     }
 
     public long getId() {
         return id;
     }
-
-    public long getExperimentId() {
-        return experimentId;
-    }
-
-    public void setExperimentId(long experimentId) {
-        this.experimentId = experimentId;
-    }
-
     public String getName() {
         return name;
     }
-
-    public void setName(String name) {
-        this.name = name;
+    public long getExperimentId() {
+        return experimentId;
     }
-
     public String getOperatorName() {
         return operatorName;
     }
-
-    public void setOperatorName(String operatorName) {
-        this.operatorName = operatorName;
-    }
-
     public Instant getCreatedAt() {
         return createdAt;
     }

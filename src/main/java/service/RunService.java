@@ -3,8 +3,6 @@ package service;
 import domain.Run;
 import util.IdGenerator;
 import validation.ValidationException;
-import validation.RunValidator;
-import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.TreeMap;
@@ -14,18 +12,10 @@ public class RunService {
     private final IdGenerator idGenerator = new IdGenerator();
 
     public Run add(long experimentId, String name, String operatorName) {
+        long id = idGenerator.generateId();
 
-        long id = idGenerator.next();
+        Run run = new Run(experimentId, name, operatorName);
 
-        Run run = new Run(
-                id,
-                experimentId,
-                name,
-                operatorName,
-                Instant.now()
-        );
-
-        RunValidator.validate(run);
         runs.put(id, run);
         return run;
     }
@@ -54,17 +44,6 @@ public class RunService {
 
     public Run update(long id, String name, String operatorName) {
         Run run = getById(id);
-
-//        Создаём временный объект
-        Run temp = new Run(
-                run.getId(),
-                run.getExperimentId(),
-                name,
-                operatorName,
-                run.getCreatedAt()
-        );
-//        Валидируем временный объект, и если всё ок - меняем оригинал
-        RunValidator.validate(temp);
 
         run.setName(name);
         run.setOperatorName(operatorName);

@@ -19,9 +19,8 @@ public final class Experiment {
     // Когда изменяли. Программа обновляет автоматически.
     private Instant updatedAt;
 
-    private final IdGenerator idGenerator = new IdGenerator();
-
     public Experiment(String name, String description, String ownerUsername) {
+        IdGenerator idGenerator = new IdGenerator();
         this.id = idGenerator.generateId();
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
@@ -35,19 +34,19 @@ public final class Experiment {
         this.ownerUsername = ownerUsername;
     }
 
-    static void validateName(String name) {
+    private static void validateName(String name) {
         if (name == null || name.isBlank())
             throw new ValidationException("Experiment name can't be empty");
         if (name.length() > 128)
             throw new ValidationException("Experiment name too long");
     }
 
-    static void validateDescription(String description) {
+    private static void validateDescription(String description) {
         if (description != null && description.length() > 512)
             throw new ValidationException("Description too long");
     }
 
-    static void validateOwnerUsername(String ownerUsername) {
+    private static void validateOwnerUsername(String ownerUsername) {
         if (ownerUsername == null || ownerUsername.isBlank())
             throw new ValidationException("OwnerUsername can't be empty");
         if (ownerUsername.length() > 128)
