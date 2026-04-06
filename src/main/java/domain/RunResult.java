@@ -1,4 +1,7 @@
 package domain;
+
+import util.IdGenerator;
+import validation.ValidationException;
 import java.time.Instant;
 
 public final class RunResult {
@@ -17,57 +20,94 @@ public final class RunResult {
     private String comment;
     // Когда добавили результат. Программа ставит автоматически.
     private final Instant createdAt;
+    private Instant updatedAt;
 
-    public RunResult(long id, long runId, MeasurementParam param, double value, String unit, String comment, Instant createdAt) {
-        this.id = id;
+    public RunResult(long runId, MeasurementParam param, double value, String unit, String comment) {
+        IdGenerator idGenerator = new IdGenerator();
+        this.id = idGenerator.generateId();
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+
+        validateRunId(runId);
+        validateParam(param);
+        validateValue(value);
+        validateUnit(unit);
+        if (comment != null) validateComment(comment);
+
         this.runId = runId;
         this.param = param;
         this.value = value;
         this.unit = unit;
         this.comment = comment;
-        this.createdAt = createdAt;
+    }
+
+    private static void validateRunId(long runId) {
+        if (runId <= 0)
+            throw new ValidationException("RunID must be positive");
+    }
+
+    private static void validateParam(MeasurementParam param) {
+        if (param == null)
+            throw new ValidationException("Measurement parameter can't be null");
+    }
+
+    private static void validateValue(double value) {
+        if (value < 0)
+            throw new ValidationException("Measurement value can't be negative");
+    }
+
+    private static void validateUnit(String unit) {
+        if (unit == null || unit.isBlank())
+            throw new ValidationException("Unit can't be empty");
+    }
+
+    private static void validateComment(String comment) {
+        if (comment != null && comment.length() > 128)
+            throw new ValidationException("Comment too long");
+    }
+
+    public void setParam(MeasurementParam param) {
+        validateParam(param);
+        this.param = param;
+        this.updatedAt = Instant.now();
+    }
+
+    public void setValue(double value) {
+        validateValue(value);
+        this.value = value;
+        this.updatedAt = Instant.now();
+    }
+
+    public void setUnit(String unit) {
+        validateUnit(unit);
+        this.unit = unit;
+        this.updatedAt = Instant.now();
+    }
+
+    public void setComment(String comment) {
+        validateComment(comment);
+        this.comment = comment;
+        this.updatedAt = Instant.now();
     }
 
     public long getId() {
         return id;
     }
-
     public long getRunId() {
         return runId;
     }
-
-    public MeasurementParam getParam() {
-        return param;
-    }
-
-    public void setParam(MeasurementParam param) {
-        this.param = param;
-    }
-
-    public double getValue() {
-        return value;
-    }
-
-    public void setValue(double value) {
-        this.value = value;
-    }
-
     public String getUnit() {
         return unit;
     }
-
-    public void setUnit(String unit) {
-        this.unit = unit;
+    public MeasurementParam getParam() {
+        return param;
     }
-
+    public double getValue() {
+        return value;
+    }
     public String getComment() {
         return comment;
     }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
     public Instant getCreatedAt() {
         return createdAt;
     }

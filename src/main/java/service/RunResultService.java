@@ -3,7 +3,6 @@ package service;
 import domain.MeasurementParam;
 import domain.RunResult;
 import util.IdGenerator;
-import validation.RunResultValidator;
 import validation.ValidationException;
 
 import java.time.Instant;
@@ -16,26 +15,11 @@ public class RunResultService {
     private final TreeMap<Long, RunResult> results = new TreeMap<>();
     private final IdGenerator idGenerator = new IdGenerator();
 
-    public RunResult add(long runId,
-                         MeasurementParam param,
-                         double value,
-                         String unit,
-                         String comment
-                         ) {
+    public RunResult add(long runId, MeasurementParam param, double value, String unit, String comment) {
+        long id = idGenerator.generateId();
 
-        long id = idGenerator.next();
+        RunResult result = new RunResult(runId, param, value, unit, comment);
 
-        RunResult result = new RunResult(
-                id,
-                runId,
-                param,
-                value,
-                unit,
-                comment,
-                Instant.now()
-        );
-
-        RunResultValidator.validate(result);
         results.put(id, result);
         return result;
     }
@@ -61,25 +45,8 @@ public class RunResultService {
         results.remove(id);
     }
 
-    public RunResult update(long id,
-                            MeasurementParam param,
-                            double value,
-                            String unit,
-                            String comment) {
-
+    public RunResult update(long id, MeasurementParam param, double value, String unit, String comment) {
         RunResult result = getById(id);
-
-        RunResult temp = new RunResult(
-                result.getId(),
-                result.getRunId(),
-                param,
-                value,
-                unit,
-                comment,
-                result.getCreatedAt()
-        );
-
-        RunResultValidator.validate(temp);
 
         result.setParam(param);
         result.setValue(value);
