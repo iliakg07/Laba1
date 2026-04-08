@@ -82,8 +82,14 @@ public final class RunResult {
 
     public void setParam(MeasurementParam param) {
         validateParam(param);
+//        Сохраняем старое значение value
+        double oldValue = this.value;
+//        Меняем param
         this.param = param;
+//        Валидируем старое значение value НОВЫМ параметром
+        validateValueByParam(param, oldValue);
         this.updatedAt = Instant.now();
+//        Во избежание ситуации когда мы меняем параметр "температура = -10С" на "рН = -10С"
     }
 
     public void setValue(double value) {
