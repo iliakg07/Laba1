@@ -9,28 +9,20 @@ import java.util.TreeMap;
 
 public class ExperimentService {
 
-    private final TreeMap<Long, Experiment> experiments = new TreeMap<>(); // коллекция экспериментов
+//    Хранилище экспериментов - ключ = id, значение = сам объект
+    private final TreeMap<Long, Experiment> experiments = new TreeMap<>();
+//    Счётчик id - ответственность сервиса, хранится в нём
+    private long nextId = 1;
+    private long generateNextId() {
+        return nextId++;
+    }
 
     public Experiment add(String name, String description, String ownerUsername) {
-        long id = IdGenerator.generateId();
+        long id = generateNextId();
 
-        Experiment exp = new Experiment(name, description, ownerUsername);
-
+        Experiment exp = new Experiment(id, name, description, ownerUsername);
         experiments.put(id, exp);
         return exp;
-    }
-
-    public Experiment getById(long id) {
-        Experiment exp = experiments.get(id);
-
-        if (exp == null) {
-            throw new ValidationException("Experiment not found with id - " + id);
-        }
-        return exp;
-    }
-
-    public Collection<Experiment> list() {
-        return List.copyOf(experiments.values()); // возвращаем копию, чтобы никак нельзя было извне поменять оригинал
     }
 
     public void remove(long id) {
@@ -42,12 +34,23 @@ public class ExperimentService {
     }
 
     public Experiment update(long id, String name, String description, String ownerUsername) {
-        Experiment exp = getById(id);
-//        валидация обновлённых параметров происходит через сеттеры
-        exp.setName(name);
-        exp.setDescription(description);
-        exp.setOwnerUsername(ownerUsername);
+//        Сервис находит нужный объект по id, само изменение выполняет доменный объект
+        Experiment experiment = getById(id);
+        experiment.update(name, description, ownerUsername);
+        return experiment;
+    }
 
+    public Experiment getById(long id) {
+        Experiment exp = experiments.get(id);
+
+        if (exp == null) {
+            throw new ValidationException("Experiment not found with id - " + id);
+        }
         return exp;
+    }
+
+//    Возвращаем копию значений, чтобы внешний код не работал с внутренней коллекцией напрямую
+    public Collection<Experiment> list() {
+        return List.copyOf(experiments.values());
     }
 }

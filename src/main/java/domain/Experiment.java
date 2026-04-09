@@ -19,18 +19,24 @@ public final class Experiment {
     // Когда изменяли. Программа обновляет автоматически.
     private Instant updatedAt;
 
-    public Experiment(String name, String description, String ownerUsername) {
-        this.id = IdGenerator.generateId();
+    public Experiment(long id, String name, String description, String ownerUsername) {
         this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
+        this.updatedAt = this.createdAt;
 
+        validateId(id);
         validateName(name);
         validateDescription(description);
         validateOwnerUsername(ownerUsername);
 
+        this.id = id;
         this.name = name;
         this.description = description;
         this.ownerUsername = ownerUsername;
+    }
+
+    private static void validateId(long id) {
+        if (id <= 0)
+            throw new ValidationException("Experiment ID must be positive");
     }
 
     private static void validateName(String name) {
@@ -66,6 +72,19 @@ public final class Experiment {
 
     public void setOwnerUsername(String ownerUsername) {
         validateOwnerUsername(ownerUsername);
+        this.ownerUsername = ownerUsername;
+        this.updatedAt = Instant.now();
+    }
+
+/*    Выносим метод обновления из сервиса в доменный класс, тк он должен
+      безопасно и корректно менять своё состояние, и не имеет отношения к коллекции */
+    public void update(String name, String description, String ownerUsername) {
+        validateName(name);
+        validateDescription(description);
+        validateOwnerUsername(ownerUsername);
+
+        this.name = name;
+        this.description = description;
         this.ownerUsername = ownerUsername;
         this.updatedAt = Instant.now();
     }
