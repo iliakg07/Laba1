@@ -64,4 +64,39 @@ class RunResultTest {
         assertThrows(ValidationException.class, () ->
                 rr.setComment("a".repeat(129)));
     }
+
+    @Test
+//    Проверяем валидацию отрицательного рН
+    void shouldThrowWhenPhIsNegative() {
+        assertThrows(ValidationException.class, () ->
+                new RunResult(1, MeasurementParam.pH, -1.0, "pH", "comment"));
+    }
+
+    @Test
+//    Проверяем валидацию слишком высокого рН
+    void shouldThrowWhenPhIsTooHigh() {
+        assertThrows(ValidationException.class, () ->
+                new RunResult(1, MeasurementParam.pH, 15.0, "pH", "comment"));
+    }
+
+    @Test
+//    Проверяем, что не кидает исключение на отрицательную температуру
+    void shouldNotThrowWhenTemperatureIsNegative() {
+        var result = new RunResult(1, MeasurementParam.Temperature, -10.0, "C", "cold");
+        assertEquals(-10.0, result.getValue());
+    }
+
+    @Test
+//    Проверяем, что через сеттер ставится отрицательная температура
+    void shouldSetNegativeTemperature() {
+        var result = new RunResult(1, MeasurementParam.Temperature, 25.0, "C", "comment");
+        result.setValue(-10.0);
+        assertEquals(-10.0, result.getValue());
+    }
+    @Test
+//    Проверяем валидацию отрицательной концентрации
+    void shouldThrowWhenConcentrationIsNegative() {
+        assertThrows(ValidationException.class, () ->
+                new RunResult(1, MeasurementParam.Concentration, -1.0, "mg/L", "comment"));
+    }
 }
