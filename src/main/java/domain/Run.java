@@ -9,7 +9,7 @@ public final class Run {
     private final long id;
     // К какому эксперименту относится (id эксперимента).
     // Должен ссылаться на реально существующий Experiment.
-    private long experimentId;
+    private final long experimentId;
     // Название запуска reminder: “Run-2026-02-03-A”. Нельзя пустое. До 128 символов.
     private String name;
     // Кто выполнял запуск (логин или имя). Нельзя пустое. До 64 символов.
@@ -18,18 +18,24 @@ public final class Run {
     private final Instant createdAt;
     private Instant updatedAt;
 
-    public Run(long experimentId, String name, String operatorName) {
-        this.id = IdGenerator.generateId();
+    public Run(long id, long experimentId, String name, String operatorName) {
         this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
+        this.updatedAt = this.createdAt;
 
+        validateId(id);
         validateExperimentId(experimentId);
         validateName(name);
         validateOperatorName(operatorName);
 
+        this.id = id;
         this.experimentId = experimentId;
         this.name = name;
         this.operatorName = operatorName;
+    }
+
+    private static void validateId(long id) {
+        if (id <= 0)
+            throw new ValidationException("Run ID must be positive");
     }
 
     private static void validateExperimentId(long experimentId) {
@@ -59,6 +65,17 @@ public final class Run {
 
     public void setOperatorName(String operatorName) {
         validateOperatorName(operatorName);
+        this.operatorName = operatorName;
+        this.updatedAt = Instant.now();
+    }
+
+    /*    Выносим метод обновления из сервиса в доменный класс, тк он должен
+          безопасно и корректно менять своё состояние, и не имеет отношения к коллекции */
+    public void update(String name, String operatorName) {
+        validateName(name);
+        validateOperatorName(operatorName);
+
+        this.name = name;
         this.operatorName = operatorName;
         this.updatedAt = Instant.now();
     }
