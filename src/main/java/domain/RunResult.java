@@ -22,22 +22,28 @@ public final class RunResult {
     private final Instant createdAt;
     private Instant updatedAt;
 
-    public RunResult(long runId, MeasurementParam param, double value, String unit, String comment) {
-        this.id = IdGenerator.generateId();
+    public RunResult(long id, long runId, MeasurementParam param, double value, String unit, String comment) {
         this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
+        this.updatedAt = this.createdAt;
 
+        validateId(id);
         validateRunId(runId);
         validateParam(param);
         validateValueByParam(param, value);
         validateUnit(unit);
         if (comment != null) validateComment(comment);
 
+        this.id = id;
         this.runId = runId;
         this.param = param;
         this.value = value;
         this.unit = unit;
         this.comment = comment;
+    }
+
+    private static void validateId(long id) {
+        if (id <= 0)
+            throw new ValidationException("RunResult ID must be positive");
     }
 
     private static void validateRunId(long runId) {
@@ -73,6 +79,8 @@ public final class RunResult {
     private static void validateUnit(String unit) {
         if (unit == null || unit.isBlank())
             throw new ValidationException("Unit can't be empty");
+        if (unit.length() > 16)
+            throw new ValidationException("Unit too long");
     }
 
     private static void validateComment(String comment) {
@@ -82,14 +90,10 @@ public final class RunResult {
 
     public void setParam(MeasurementParam param) {
         validateParam(param);
-//        Сохраняем старое значение value
-        double oldValue = this.value;
-//        Меняем param
+        validateValueByParam(param, value);
+
         this.param = param;
-//        Валидируем старое значение value НОВЫМ параметром
-        validateValueByParam(param, oldValue);
         this.updatedAt = Instant.now();
-//        Во избежание ситуации когда мы меняем параметр "температура = -10С" на "рН = -10С"
     }
 
     public void setValue(double value) {
@@ -108,6 +112,21 @@ public final class RunResult {
 
     public void setComment(String comment) {
         validateComment(comment);
+        this.comment = comment;
+        this.updatedAt = Instant.now();
+    }
+
+    /*    Выносим метод обновления из сервиса в доменный класс, тк он должен
+          безопасно и корректно менять своё состояние, и не имеет отношения к коллекции */
+    public void update(MeasurementParam param, double value, String unit, String comment) {
+        validateParam(param);
+        validateValueByParam(param, value);
+        validateUnit(unit);
+        validateComment(comment);
+
+        this.param = param;
+        this.value = value;
+        this.unit = unit;
         this.comment = comment;
         this.updatedAt = Instant.now();
     }

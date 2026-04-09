@@ -13,13 +13,40 @@ import java.util.TreeMap;
 public class RunResultService {
 
     private final TreeMap<Long, RunResult> results = new TreeMap<>();
+//    Нужно для проверки, что результат создаётся только для существующего Run
+    private final RunService runService;
+//     Локальный счётчик ID, генерируется в сервисе
+    private long nextId = 1;
+
+    public RunResultService(RunService runService) {
+        this.runService = runService;
+    }
+
+    private long generateNextId() {
+        return nextId++;
+    }
 
     public RunResult add(long runId, MeasurementParam param, double value, String unit, String comment) {
-        long id = IdGenerator.generateId();
+//        Проверка существования "родительского" Run перед добавлением его результата
+        runService.getById(runId);
 
-        RunResult result = new RunResult(runId, param, value, unit, comment);
-
+        long id = generateNextId();
+        RunResult result = new RunResult(id, runId, param, value, unit, comment);
         results.put(id, result);
+        return result;
+    }
+
+    public void remove(long id) {
+        if (!results.containsKey(id)) {
+            throw new ValidationException("RunResult with id " + id + " not found");
+        }
+        results.remove(id);
+    }
+
+    public RunResult update(long id, MeasurementParam param, double value, String unit, String comment) {
+//        Сервис находит нужный объект по ID, обновление реализуется доменным объектом
+        RunResult result = getById(id);
+        result.update(param, value, unit, comment);
         return result;
     }
 
@@ -36,21 +63,12 @@ public class RunResultService {
         return List.copyOf(results.values());
     }
 
-    public void remove(long id) {
-        if (!results.containsKey(id)) {
-            throw new ValidationException("RunResult with id " + id + " not found");
-        }
-        results.remove(id);
-    }
-
-    public RunResult update(long id, MeasurementParam param, double value, String unit, String comment) {
-        RunResult result = getById(id);
-
-        result.setParam(param);
-        result.setValue(value);
-        result.setUnit(unit);
-        result.setComment(comment);
-
-        return result;
+    public Collection<RunResult> listByRunId(long runId) {
+//        Сначала убеждаемся, что такой Run существует
+        runService.getById(runId);
+//        Фильтруем все результаты и оставляем рез-ты только указанного прогона
+        return results.values().stream()
+                .filter(result -> result.getRunId() == runId)
+                .toList();
     }
 }
