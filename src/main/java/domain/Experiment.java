@@ -1,6 +1,5 @@
 package domain;
 
-import util.IdGenerator;
 import validation.ValidationException;
 
 import java.time.Instant;

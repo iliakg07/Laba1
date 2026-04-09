@@ -2,7 +2,6 @@ package service;
 
 import domain.MeasurementParam;
 import domain.RunResult;
-import util.IdGenerator;
 import validation.ValidationException;
 
 import java.time.Instant;

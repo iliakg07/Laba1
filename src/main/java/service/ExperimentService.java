@@ -1,7 +1,6 @@
 package service;
 
 import domain.Experiment;
-import util.IdGenerator;
 import validation.ValidationException;
 import java.util.Collection;
 import java.util.List;
