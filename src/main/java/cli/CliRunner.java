@@ -66,6 +66,7 @@ public class CliRunner {
                 case "exp_add" -> handleExperimentAdd(parsedCommand);
                 case "exp_list" -> handleExperimentList(parsedCommand);
                 case "exp_show" -> handleExperimentShow(parsedCommand);
+                case "exp_update" -> handleExperimentUpdate(parsedCommand);
                 default -> out.println("Unknown command: " + line + ". Type 'help' to see available commands.");
             }
         } catch (ValidationException e) {
@@ -105,6 +106,7 @@ public class CliRunner {
         out.println("exp_add - create a new experiment");
         out.println("exp_list - show all experiments");
         out.println("exp_show <id> - show one experiment");
+        out.println("exp_update <id> field=value ... - update experiment");
         out.println("exit - stop the program");
     }
 
@@ -250,6 +252,61 @@ public class CliRunner {
         out.println("Owner username: " + experiment.getOwnerUsername());
         out.println("Created at: " + experiment.getCreatedAt());
         out.println("Updated at: " + experiment.getUpdatedAt());
+    }
+
+    private ExperimentUpdateRequest parseExperimentUpdateRequest(ParsedCommand parsedCommand) {
+
+//        Берёт всю строку аргументов после команды exp_update
+        String arguments = parsedCommand.arguments();
+        if (arguments.isEmpty()) {
+            throw new ValidationException("exp_update requires experiment id and one field=value");
+        }
+
+//        Делит строку по пробелам на две части - id + field=value
+        String[] parts = arguments.split("\\s+");
+        long experimentId;
+        try {
+            experimentId = Long.parseLong(parts[0]);
+        } catch (NumberFormatException e) {
+            throw new ValidationException("experiment id must be a number");
+        }
+
+        if (parts.length != 2) {
+            throw new ValidationException("exp_update accepts exactly one field=value");
+        }
+
+//        Вторую часть делит на поле и значение
+        String[] fieldAndValue = parts[1].split("=", 2);
+        if (fieldAndValue.length != 2) {
+            throw new ValidationException("Invalid update argument: " + parts[1]);
+        }
+
+        return new ExperimentUpdateRequest(experimentId, fieldAndValue[0], fieldAndValue[1]);
+    }
+
+    private void handleExperimentUpdate(ParsedCommand parsedCommand) {
+
+//        Получает из парсера id, field, value, находит эксперимент по id
+        ExperimentUpdateRequest request = parseExperimentUpdateRequest(parsedCommand);
+        Experiment experiment = experimentService.getById(request.id());
+
+        String updatedName = experiment.getName();
+        String updatedDescription = experiment.getDescription();
+        String updatedOwnerUsername = experiment.getOwnerUsername();
+
+        switch (request.field()) {
+//            За один цикл команды обновляем только одно поле
+            case "name" -> updatedName = request.value();
+            case "description" -> updatedDescription = request.value();
+            case "ownerUsername" -> updatedOwnerUsername = request.value();
+            default -> throw new ValidationException("Unknown experiment field: " + request.field());
+        }
+
+        experimentService.update(experiment.getId(), updatedName, updatedDescription, updatedOwnerUsername);
+        out.println("Experiment updated.");
+    }
+
+    private record ExperimentUpdateRequest(long id, String field, String value) {
     }
 
     private record ParsedCommand(String name, String arguments) {
