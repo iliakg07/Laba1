@@ -1,6 +1,7 @@
 package cli;
 
 import domain.Experiment;
+import domain.Run;
 import service.ExperimentService;
 import service.RunResultService;
 import service.RunService;
@@ -67,6 +68,8 @@ public class CliRunner {
                 case "exp_list" -> handleExperimentList(parsedCommand);
                 case "exp_show" -> handleExperimentShow(parsedCommand);
                 case "exp_update" -> handleExperimentUpdate(parsedCommand);
+                case "run_add" -> handleRunAdd(parsedCommand);
+
                 default -> out.println("Unknown command: " + line + ". Type 'help' to see available commands.");
             }
         } catch (ValidationException e) {
@@ -107,6 +110,8 @@ public class CliRunner {
         out.println("exp_list - show all experiments");
         out.println("exp_show <id> - show one experiment");
         out.println("exp_update <id> field=value ... - update experiment");
+        out.println("run_add <experimentId> - create a run for experiment");
+
         out.println("exit - stop the program");
     }
 
@@ -304,6 +309,21 @@ public class CliRunner {
 
         experimentService.update(experiment.getId(), updatedName, updatedDescription, updatedOwnerUsername);
         out.println("Experiment updated.");
+    }
+
+//    Команда run_add - добавить прогон эксперимента (интерактивно)
+    private void handleRunAdd(ParsedCommand parsedCommand) {
+//         Получение и проверка experimentId через парсер
+        long experimentId = parseRequiredLongArgument(parsedCommand, "run_add", "experiment id");
+
+        out.println("Creating a new run.");
+//        Пользователь вводит параметры прогона
+        String runName = readRequiredValue("Run name");
+        String operatorName = readRequiredValue("Operator");
+
+//        Передаёт в сервис полученные данные и выводит ID созданного run
+        Run run = runService.add(experimentId, runName, operatorName);
+        out.println("Run created with id " + run.getId());
     }
 
     private record ExperimentUpdateRequest(long id, String field, String value) {
