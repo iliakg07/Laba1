@@ -74,6 +74,7 @@ public class CliRunner {
                 case "run_list" -> handleRunList(parsedCommand);
                 case "run_show" -> handleRunShow(parsedCommand);
                 case "res_add" -> handleResultAdd(parsedCommand);
+                case "res_list" -> handleResultList(parsedCommand);
                 default -> out.println("Unknown command: " + line + ". Type 'help' to see available commands.");
             }
         } catch (ValidationException e) {
@@ -118,6 +119,7 @@ public class CliRunner {
         out.println("run_list <experimentId> - show runs for experiment");
         out.println("run_show <runId> - show one run");
         out.println("res_add <runId> - add a result for run");
+        out.println("res_list <runId> [--param PARAM] - show results for run");
         out.println("exit - stop the program");
     }
 
@@ -425,7 +427,88 @@ public class CliRunner {
         out.println("Result created with id " + result.getId());
     }
 
+    private ResultListRequest parseResultListRequest(ParsedCommand parsedCommand) {
+//        Получает и разбирает аргументы команды res_list
+        String arguments = parsedCommand.arguments();
+        if (arguments.isEmpty()) {
+            throw new ValidationException("res_list requires run id");
+        }
+
+        String[] parts = arguments.split("\\s+");
+        if (parts.length != 1 && parts.length != 3) {
+            throw new ValidationException("res_list accepts: <runId> or <runId> --param PARAM");
+        }
+
+        long runId;
+        try {
+//            Проверяет что runId - число, перевод в long
+            runId = Long.parseLong(parts[0]);
+        } catch (NumberFormatException e) {
+            throw new ValidationException("run id must be a number");
+        }
+
+        if (parts.length == 1) {
+            return new ResultListRequest(runId, null);
+        }
+
+        if (!"--param".equals(parts[1])) {
+            throw new ValidationException("res_list accepts only the --param option");
+        }
+
+        MeasurementParam param = parseMeasurementParam(parts[2], "param");
+        return new ResultListRequest(runId, param);
+    }
+
+    private MeasurementParam parseMeasurementParam(String rawValue, String label) {
+        for (MeasurementParam param : MeasurementParam.values()) {
+            if (param.name().equalsIgnoreCase(rawValue)) {
+                return param;
+            }
+        }
+
+        throw new ValidationException(label + " must be one of: pH, Temperature, Concentration.");
+    }
+
+//    Форматированный вывод списка результатов
+    private String formatResultLine(RunResult result) {
+        return result.getId()
+                + " | "
+                + " | param - " + result.getParam()
+                + " | value - " + result.getValue()
+                + " | unit - " + result.getUnit()
+                + " | comment - " + formatNullableValue(result.getComment());
+    }
+
+//    Команда res_list - показать список результатов
+    private void handleResultList(ParsedCommand parsedCommand) {
+//        Через парсер берёт runId и param, находит run
+        ResultListRequest request = parseResultListRequest(parsedCommand);
+        Run run = runService.getById(request.runId());
+//        Записываем в коллекцию результаты конкретного прогона
+        var results = runResultService.listByRunId(request.runId());
+
+//        Если передан param, то фильтрует список по нему
+        if (request.param() != null) {
+            results = results.stream()
+                    .filter(result -> result.getParam() == request.param())
+                    .toList();
+        }
+
+        if (results.isEmpty()) {
+            out.println("No results found for run " + run.getId() + ".");
+            return;
+        }
+
+        out.println("Results for run " + run.getId() + " (" + run.getName() + "):");
+        for (RunResult result : results) {
+            out.println(formatResultLine(result));
+        }
+    }
+
     private record ExperimentUpdateRequest(long id, String field, String value) {
+    }
+
+    private record ResultListRequest(long runId, MeasurementParam param) {
     }
 
     private record ParsedCommand(String name, String arguments) {
