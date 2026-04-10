@@ -1,7 +1,9 @@
 package cli;
 
 import domain.Experiment;
+import domain.MeasurementParam;
 import domain.Run;
+import domain.RunResult;
 import service.ExperimentService;
 import service.RunResultService;
 import service.RunService;
@@ -71,6 +73,7 @@ public class CliRunner {
                 case "run_add" -> handleRunAdd(parsedCommand);
                 case "run_list" -> handleRunList(parsedCommand);
                 case "run_show" -> handleRunShow(parsedCommand);
+                case "res_add" -> handleResultAdd(parsedCommand);
                 default -> out.println("Unknown command: " + line + ". Type 'help' to see available commands.");
             }
         } catch (ValidationException e) {
@@ -114,6 +117,7 @@ public class CliRunner {
         out.println("run_add <experimentId> - create a run for experiment");
         out.println("run_list <experimentId> - show runs for experiment");
         out.println("run_show <runId> - show one run");
+        out.println("res_add <runId> - add a result for run");
         out.println("exit - stop the program");
     }
 
@@ -373,6 +377,52 @@ public class CliRunner {
         out.println("Results: " + resultCount);
         out.println("Created at: " + run.getCreatedAt());
         out.println("Updated at: " + run.getUpdatedAt());
+    }
+
+    private double readRequiredDouble(String label) {
+        while (true) {
+            String rawValue = readRequiredValue(label);
+            try {
+
+//                Пытается превратить полученную строку в double
+                return Double.parseDouble(rawValue);
+            } catch (NumberFormatException e) {
+                out.println(label + " must be a number.");
+            }
+        }
+    }
+
+    private MeasurementParam readMeasurementParam(String label) {
+        while (true) {
+            String rawValue = readRequiredValue(label);
+
+//            Проходит по enum, сравнивает введённый текст с ним
+//            Если есть совпадение - возвращает нужный param, если нет - просит ввести правильный
+            for (MeasurementParam param : MeasurementParam.values()) {
+                if (param.name().equalsIgnoreCase(rawValue)) {
+                    return param;
+                }
+            }
+
+            out.println(label + " must be one of: pH, Temperature, Concentration.");
+        }
+    }
+
+//    Команда res_add - добавить результат прогона
+    private void handleResultAdd(ParsedCommand parsedCommand) {
+//        Через парсер берёт id прогона
+        long runId = parseRequiredLongArgument(parsedCommand, "res_add", "run id");
+
+        out.println("Creating a new result.");
+//        Интерактивный ввод параметров
+        MeasurementParam param = readMeasurementParam("Parameter");
+        double value = readRequiredDouble("Value");
+        String unit = readRequiredValue("Unit");
+        String comment = readOptionalValue("Comment");
+
+//        Сервис добавляет результат в коллекцию, выводится id результата
+        RunResult result = runResultService.add(runId, param, value, unit, comment);
+        out.println("Result created with id " + result.getId());
     }
 
     private record ExperimentUpdateRequest(long id, String field, String value) {
