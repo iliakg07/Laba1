@@ -64,6 +64,7 @@ public class CliRunner {
                 case "help" -> printHelp();
                 case "exit" -> handleExit();
                 case "exp_add" -> handleExperimentAdd(parsedCommand);
+                case "exp_list" -> handleExperimentList(parsedCommand);
                 default -> out.println("Unknown command: " + line + ". Type 'help' to see available commands.");
             }
         } catch (ValidationException e) {
@@ -101,6 +102,7 @@ public class CliRunner {
         out.println("Available commands:");
         out.println("help - show available commands");
         out.println("exp_add - create a new experiment");
+        out.println("exp_list - show all experiments");
         out.println("exit - stop the program");
     }
 
@@ -108,19 +110,6 @@ public class CliRunner {
 //        Останавливает цикл while
         running = false;
         out.println("CLI stopped.");
-    }
-
-//    Команда exp_add
-    private void handleExperimentAdd(ParsedCommand parsedCommand) {
-        guaranteeNoArguments(parsedCommand, "exp_add");
-
-        out.println("Creating a new experiment.");
-        String name = readRequiredValue("Name");
-        String description = readOptionalValue("Description");
-        String ownerUsername = readRequiredValue("Owner username");
-
-        Experiment experiment = experimentService.add(name, description, ownerUsername);
-        out.println("Experiment created with id " + experiment.getId());
     }
 
 //    Обеспечиваем вывод команды без ошибок, так как ее запуск происходит без ввода аргументов.
@@ -164,6 +153,55 @@ public class CliRunner {
 
 //        Если value пустая, вернуть null; иначе - вернуть value (= if-else)
         return value.isBlank() ? null : value;
+    }
+
+    private String formatExperimentLine(Experiment experiment) {
+
+//        Метод получает объект эксперимента, и выводит текстовую строку из полей объекта
+//        Если описание пустое, то выведет "-"
+        String description = experiment.getDescription() == null ? "-" : experiment.getDescription();
+        return experiment.getId()
+                + " | "
+                + " | name - " + experiment.getName()
+                + " | owner - " + experiment.getOwnerUsername()
+                + " | description - " + description;
+    }
+
+//    Команда exp_add - добавить эксперимент
+    private void handleExperimentAdd(ParsedCommand parsedCommand) {
+
+//        Проверяем что команда вызывается без аргументов
+        guaranteeNoArguments(parsedCommand, "exp_add");
+
+        out.println("Creating a new experiment.");
+
+//        По очереди спрашивает name, description, owner username
+        String name = readRequiredValue("Name");
+        String description = readOptionalValue("Description");
+        String ownerUsername = readRequiredValue("Owner username");
+
+//        Передаёт собранные данные в сервис, и выводит ID созданного эксперимента
+        Experiment experiment = experimentService.add(name, description, ownerUsername);
+        out.println("Experiment created with id " + experiment.getId());
+    }
+
+//    Команда exp_list - показать список добавленных экспериментов
+    private void handleExperimentList(ParsedCommand parsedCommand) {
+
+//        Проверяем, что команда вызвана без аргументов
+        guaranteeNoArguments(parsedCommand, "exp_list");
+
+        var experiments = experimentService.list();
+        if (experiments.isEmpty()) {
+            out.println("No experiments found.");
+            return;
+        }
+
+//        Если список не пустой, то форматированно выводит каждый эксперимент
+        out.println("Experiments:");
+        for (Experiment experiment : experiments) {
+            out.println(formatExperimentLine(experiment));
+        }
     }
 
     private record ParsedCommand(String name, String arguments) {
