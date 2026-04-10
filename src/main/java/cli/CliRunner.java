@@ -65,6 +65,7 @@ public class CliRunner {
                 case "exit" -> handleExit();
                 case "exp_add" -> handleExperimentAdd(parsedCommand);
                 case "exp_list" -> handleExperimentList(parsedCommand);
+                case "exp_show" -> handleExperimentShow(parsedCommand);
                 default -> out.println("Unknown command: " + line + ". Type 'help' to see available commands.");
             }
         } catch (ValidationException e) {
@@ -103,6 +104,7 @@ public class CliRunner {
         out.println("help - show available commands");
         out.println("exp_add - create a new experiment");
         out.println("exp_list - show all experiments");
+        out.println("exp_show <id> - show one experiment");
         out.println("exit - stop the program");
     }
 
@@ -155,18 +157,6 @@ public class CliRunner {
         return value.isBlank() ? null : value;
     }
 
-    private String formatExperimentLine(Experiment experiment) {
-
-//        Метод получает объект эксперимента, и выводит текстовую строку из полей объекта
-//        Если описание пустое, то выведет "-"
-        String description = experiment.getDescription() == null ? "-" : experiment.getDescription();
-        return experiment.getId()
-                + " | "
-                + " | name - " + experiment.getName()
-                + " | owner - " + experiment.getOwnerUsername()
-                + " | description - " + description;
-    }
-
 //    Команда exp_add - добавить эксперимент
     private void handleExperimentAdd(ParsedCommand parsedCommand) {
 
@@ -183,6 +173,18 @@ public class CliRunner {
 //        Передаёт собранные данные в сервис, и выводит ID созданного эксперимента
         Experiment experiment = experimentService.add(name, description, ownerUsername);
         out.println("Experiment created with id " + experiment.getId());
+    }
+
+    private String formatExperimentLine(Experiment experiment) {
+
+//        Метод получает объект эксперимента, и выводит текстовую строку из полей объекта
+//        Если описание пустое, то выведет "-"
+        String description = experiment.getDescription() == null ? "-" : experiment.getDescription();
+        return experiment.getId()
+                + " | "
+                + " | name - " + experiment.getName()
+                + " | owner - " + experiment.getOwnerUsername()
+                + " | description - " + description;
     }
 
 //    Команда exp_list - показать список добавленных экспериментов
@@ -202,6 +204,52 @@ public class CliRunner {
         for (Experiment experiment : experiments) {
             out.println(formatExperimentLine(experiment));
         }
+    }
+
+    private long parseRequiredLongArgument(ParsedCommand parsedCommand, String commandName, String argumentLabel) {
+
+//        Берёт строку аргументов
+        String arguments = parsedCommand.arguments();
+        if (arguments.isEmpty()) {
+            throw new ValidationException(commandName + " requires " + argumentLabel);
+        }
+
+//        Делит эту строку по пробелам, если аргументов > 1 - исключение
+        String[] parts = arguments.split("\\s+");
+        if (parts.length != 1) {
+            throw new ValidationException(commandName + " accepts exactly one argument: " + argumentLabel);
+        }
+
+//        Преобразование аргумента в long
+        try {
+            return Long.parseLong(parts[0]);
+        } catch (NumberFormatException e) {
+//            Ловим ввод типа "abc"
+            throw new ValidationException(argumentLabel + " must be a number");
+        }
+    }
+
+    private String formatNullableValue(String value) {
+//        Если строковый value == null, то возвращает "-". Если нет - то само value
+        return value == null ? "-" : value;
+    }
+
+//    Команда exp_show - показать информацию по одному эксперименту
+    private void handleExperimentShow(ParsedCommand parsedCommand) {
+
+//        Вызывает метод parse..(), чтобы достать и валидировать ID
+        long experimentId = parseRequiredLongArgument(parsedCommand, "exp_show", "experiment id");
+        Experiment experiment = experimentService.getById(experimentId);
+
+        out.println("Experiment details:");
+        out.println("Id: " + experiment.getId());
+        out.println("Name: " + experiment.getName());
+
+//        Используем метод format..(), чтобы в случае пустого описания вывести "-"
+        out.println("Description: " + formatNullableValue(experiment.getDescription()));
+        out.println("Owner username: " + experiment.getOwnerUsername());
+        out.println("Created at: " + experiment.getCreatedAt());
+        out.println("Updated at: " + experiment.getUpdatedAt());
     }
 
     private record ParsedCommand(String name, String arguments) {
