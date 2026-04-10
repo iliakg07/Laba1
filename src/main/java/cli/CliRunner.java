@@ -70,6 +70,7 @@ public class CliRunner {
                 case "exp_update" -> handleExperimentUpdate(parsedCommand);
                 case "run_add" -> handleRunAdd(parsedCommand);
                 case "run_list" -> handleRunList(parsedCommand);
+                case "run_show" -> handleRunShow(parsedCommand);
                 default -> out.println("Unknown command: " + line + ". Type 'help' to see available commands.");
             }
         } catch (ValidationException e) {
@@ -112,6 +113,7 @@ public class CliRunner {
         out.println("exp_update <id> field=value ... - update experiment");
         out.println("run_add <experimentId> - create a run for experiment");
         out.println("run_list <experimentId> - show runs for experiment");
+        out.println("run_show <runId> - show one run");
         out.println("exit - stop the program");
     }
 
@@ -352,6 +354,25 @@ public class CliRunner {
         for (Run run : runs) {
             out.println(formatRunLine(run));
         }
+    }
+
+//    Команда run_show - показать информацию по одному run
+    private void handleRunShow(ParsedCommand parsedCommand) {
+
+//        Через парсер достаёт и валидирует id
+        long runId = parseRequiredLongArgument(parsedCommand, "run_show", "run id");
+        Run run = runService.getById(runId);
+//        Через сервис получаем количество результатов данного прогона
+        int resultCount = runResultService.listByRunId(runId).size();
+
+        out.println("Run details:");
+        out.println("Id: " + run.getId());
+        out.println("Experiment id: " + run.getExperimentId());
+        out.println("Name: " + run.getName());
+        out.println("Operator: " + run.getOperatorName());
+        out.println("Results: " + resultCount);
+        out.println("Created at: " + run.getCreatedAt());
+        out.println("Updated at: " + run.getUpdatedAt());
     }
 
     private record ExperimentUpdateRequest(long id, String field, String value) {

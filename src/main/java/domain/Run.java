@@ -94,5 +94,8 @@ public final class Run {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;}
 }
 
