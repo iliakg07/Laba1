@@ -69,7 +69,7 @@ public class CliRunner {
                 case "exp_show" -> handleExperimentShow(parsedCommand);
                 case "exp_update" -> handleExperimentUpdate(parsedCommand);
                 case "run_add" -> handleRunAdd(parsedCommand);
-
+                case "run_list" -> handleRunList(parsedCommand);
                 default -> out.println("Unknown command: " + line + ". Type 'help' to see available commands.");
             }
         } catch (ValidationException e) {
@@ -111,7 +111,7 @@ public class CliRunner {
         out.println("exp_show <id> - show one experiment");
         out.println("exp_update <id> field=value ... - update experiment");
         out.println("run_add <experimentId> - create a run for experiment");
-
+        out.println("run_list <experimentId> - show runs for experiment");
         out.println("exit - stop the program");
     }
 
@@ -324,6 +324,34 @@ public class CliRunner {
 //        Передаёт в сервис полученные данные и выводит ID созданного run
         Run run = runService.add(experimentId, runName, operatorName);
         out.println("Run created with id " + run.getId());
+    }
+
+//    Форматированный вывод списка прогонов
+    private String formatRunLine(Run run) {
+        return run.getId()
+                + " | "
+                + " | name - " + run.getName()
+                + " | operator - " + run.getOperatorName();
+    }
+
+//    Команда run_list - показать список прогонов
+    private void handleRunList(ParsedCommand parsedCommand) {
+//        Через парсер берет experimentId, получает эксперимент и его прогоны через сервисы
+        long experimentId = parseRequiredLongArgument(parsedCommand, "run_list", "experiment id");
+        Experiment experiment = experimentService.getById(experimentId);
+//        Через сервис получает список всех прогонов этого эксперимента
+        var runs = runService.listByExpId(experimentId);
+
+        if (runs.isEmpty()) {
+            out.println("No runs found for experiment " + experiment.getId() + ".");
+            return;
+        }
+
+        out.println("Runs for experiment " + experiment.getId() + " (" + experiment.getName() + "):");
+//        Если список прогонов не пустой, то для каждого форматированно выводит инфу
+        for (Run run : runs) {
+            out.println(formatRunLine(run));
+        }
     }
 
     private record ExperimentUpdateRequest(long id, String field, String value) {
