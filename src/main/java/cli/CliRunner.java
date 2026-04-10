@@ -1,5 +1,6 @@
 package cli;
 
+import domain.Experiment;
 import service.ExperimentService;
 import service.RunResultService;
 import service.RunService;
@@ -34,7 +35,7 @@ public class CliRunner {
         new CliRunner().start();
     }
 
-    private void start() {
+    void start() {
         running = true;
         printWelcome();
 
@@ -55,16 +56,14 @@ public class CliRunner {
     }
 
     private void handleCommand(String line) {
-//        Приводит всю строку к нижнему регистру, чтобы выполнение команды не зависело от ввода
-        String command = line.toLowerCase(Locale.ROOT);
-//        Locale.ROOT - базовая локаль, не привязанная к региону или языку.
-//        Обеспечивает предсказуемый формат данных независимо от ОС или региональных настроек пользователя
+        ParsedCommand parsedCommand = parseCommand(line);
 
         try {
-            switch (command) {
+            switch (parsedCommand.name()) {
 //                Перебираем команды и вызываем соответствующий метод
                 case "help" -> printHelp();
                 case "exit" -> handleExit();
+                case "exp_add" -> handleExperimentAdd(parsedCommand);
                 default -> out.println("Unknown command: " + line + ". Type 'help' to see available commands.");
             }
         } catch (ValidationException e) {
@@ -72,6 +71,23 @@ public class CliRunner {
         } catch (RuntimeException e) {
             out.println("Unexpected error: " + e.getMessage());
         }
+    }
+
+//    Реализация того, что CLI будет отличать ввод самой команды от передаваемых ей аргументов
+    private ParsedCommand parseCommand(String line) {
+
+//        Строка, введённая пользователем (line) разделится по любому пробельному символу
+//        Максимум строка будет разделена на 2 части - имя команды + хвост из аргументов
+        String[] parts = line.split("\\s+", 2);
+
+//        Приводит всю строку к нижнему регистру.
+//        Обеспечивает одинаковый формат данных независимо от ОС или страны пользователя
+        String name = parts[0].toLowerCase(Locale.ROOT);
+
+//        Если длина массива строк, полученного ранее, > 1, то применяем .trim() к "хвосту"
+//        Иначе - вернуть пустую строку
+        String arguments = parts.length > 1 ? parts[1].trim() : "";
+        return new ParsedCommand(name, arguments);
     }
 
     private void printWelcome() {
@@ -84,6 +100,7 @@ public class CliRunner {
 //        Выводит список доступных программ
         out.println("Available commands:");
         out.println("help - show available commands");
+        out.println("exp_add - create a new experiment");
         out.println("exit - stop the program");
     }
 
@@ -91,6 +108,65 @@ public class CliRunner {
 //        Останавливает цикл while
         running = false;
         out.println("CLI stopped.");
+    }
+
+//    Команда exp_add
+    private void handleExperimentAdd(ParsedCommand parsedCommand) {
+        guaranteeNoArguments(parsedCommand, "exp_add");
+
+        out.println("Creating a new experiment.");
+        String name = readRequiredValue("Name");
+        String description = readOptionalValue("Description");
+        String ownerUsername = readRequiredValue("Owner username");
+
+        Experiment experiment = experimentService.add(name, description, ownerUsername);
+        out.println("Experiment created with id " + experiment.getId());
+    }
+
+//    Обеспечиваем вывод команды без ошибок, так как ее запуск происходит без ввода аргументов.
+//    Кидает исключение, если введём команду с каким-то аргументом (типа exp_add test)
+    private void guaranteeNoArguments(ParsedCommand parsedCommand, String commandName) {
+        if (!parsedCommand.arguments().isEmpty()) {
+            throw new ValidationException(commandName + " does not accept arguments");
+        }
+    }
+
+    private String readRequiredValue(String label) {
+//        Здесь required = поля, которые не могут быть пустыми
+        while (true) {
+            out.print(label + ": ");
+//            label = какой текст показать пользователю перед вводом (name/description/...)
+
+            if (!scanner.hasNextLine()) {
+                running = false;
+                throw new ValidationException("Input stream was closed");
+            }
+
+            String value = scanner.nextLine().trim();
+            if (!value.isEmpty()) {
+                return value;
+            }
+//            Если пользователь оставил строку пустой, просит ввести значение заново
+            out.println(label + " can't be empty.");
+        }
+    }
+
+    private String readOptionalValue(String label) {
+//        Здесь optional = поля, которые могут быть пустыми
+        out.print(label + ": ");
+
+        if (!scanner.hasNextLine()) {
+            running = false;
+            throw new ValidationException("Input stream was closed");
+        }
+
+        String value = scanner.nextLine().trim();
+
+//        Если value пустая, вернуть null; иначе - вернуть value (= if-else)
+        return value.isBlank() ? null : value;
+    }
+
+    private record ParsedCommand(String name, String arguments) {
     }
 }
 
