@@ -11,8 +11,7 @@ import validation.ValidationException;
 
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.*;
 
 public class CliRunner {
     private final Scanner scanner;
@@ -75,6 +74,7 @@ public class CliRunner {
                 case "run_show" -> handleRunShow(parsedCommand);
                 case "res_add" -> handleResultAdd(parsedCommand);
                 case "res_list" -> handleResultList(parsedCommand);
+                case "exp_summary" -> handleExperimentSummary(parsedCommand);
                 default -> out.println("Unknown command: " + line + ". Type 'help' to see available commands.");
             }
         } catch (ValidationException e) {
@@ -120,6 +120,7 @@ public class CliRunner {
         out.println("run_show <runId> - show one run");
         out.println("res_add <runId> - add a result for run");
         out.println("res_list <runId> [--param PARAM] - show results for run");
+        out.println("exp_summary <id> - show summary for experiment");
         out.println("exit - stop the program");
     }
 
@@ -502,6 +503,70 @@ public class CliRunner {
         out.println("Results for run " + run.getId() + " (" + run.getName() + "):");
         for (RunResult result : results) {
             out.println(formatResultLine(result));
+        }
+    }
+
+    private String formatSummaryLine(MeasurementParam param, List<Double> values) {
+        int count = values.size();
+        double min = values.get(0);
+        double max = values.get(0);
+        double sum = 0.0;
+
+        for (double value : values) {
+            if (value < min) {
+                min = value;
+            }
+            if (value > max) {
+                max = value;
+            }
+            sum += value;
+        }
+
+        double avg = sum / count;
+        return param
+                + ": count=" + count
+                + " min=" + formatDecimal(min)
+                + " max=" + formatDecimal(max)
+                + " avg=" + formatDecimal(avg);
+    }
+
+    private String formatDecimal(double value) {
+        return String.format(Locale.ROOT, "%.2f", value);
+    }
+
+    private void handleExperimentSummary(ParsedCommand parsedCommand) {
+
+//        Через парсер находим id эксперимента
+        long experimentId = parseRequiredLongArgument(parsedCommand, "exp_summary", "experiment id");
+        Experiment experiment = experimentService.getById(experimentId);
+//        Вызываем список прогонов этого эксперимента, чтобы сделать summary
+        var runs = runService.listByExpId(experimentId);
+
+//        Собираем все числовые значение результатов по типу параметра
+        Map<MeasurementParam, List<Double>> valuesByParam = new EnumMap<>(MeasurementParam.class);
+        for (Run run : runs) {
+//            Для каждого прогона берутся его результаты и группируются по параметру
+            for (RunResult result : runResultService.listByRunId(run.getId())) {
+                valuesByParam
+//                        Создаём список для параметра, если его еще нет
+                        .computeIfAbsent(result.getParam(), key -> new ArrayList<>())
+                        .add(result.getValue());
+            }
+        }
+
+        if (valuesByParam.isEmpty()) {
+//            Если в прогонах нет результатов
+            out.println("No summary data for experiment " + experiment.getId() + ".");
+            return;
+        }
+
+//        Порядок вывода как в enum, форматированный вывод
+        out.println("Summary for experiment " + experiment.getId() + " (" + experiment.getName() + "):");
+        for (MeasurementParam param : MeasurementParam.values()) {
+            List<Double> values = valuesByParam.get(param);
+            if (values != null && !values.isEmpty()) {
+                out.println(formatSummaryLine(param, values));
+            }
         }
     }
 
