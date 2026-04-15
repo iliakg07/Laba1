@@ -84,7 +84,7 @@ public class CliRunner {
         }
     }
 
-//    Реализация того, что CLI будет отличать ввод самой команды от передаваемых ей аргументов
+    //    Реализация того, что CLI будет отличать ввод самой команды от передаваемых ей аргументов
     private ParsedCommand parseCommand(String line) {
 
 //        Строка, введённая пользователем (line) разделится по любому пробельному символу
@@ -130,7 +130,7 @@ public class CliRunner {
         out.println("CLI stopped.");
     }
 
-//    Обеспечиваем вывод команды без ошибок, так как ее запуск происходит без ввода аргументов.
+    //    Обеспечиваем вывод команды без ошибок, так как ее запуск происходит без ввода аргументов.
 //    Кидает исключение, если введём команду с каким-то аргументом (типа exp_add test)
     private void guaranteeNoArguments(ParsedCommand parsedCommand, String commandName) {
         if (!parsedCommand.arguments().isEmpty()) {
@@ -173,7 +173,7 @@ public class CliRunner {
         return value.isBlank() ? null : value;
     }
 
-//    Команда exp_add - добавить эксперимент
+    //    Команда exp_add - добавить эксперимент
     private void handleExperimentAdd(ParsedCommand parsedCommand) {
 
 //        Проверяем что команда вызывается без аргументов
@@ -203,7 +203,7 @@ public class CliRunner {
                 + " | description - " + description;
     }
 
-//    Команда exp_list - показать список добавленных экспериментов
+    //    Команда exp_list - показать список добавленных экспериментов
     private void handleExperimentList(ParsedCommand parsedCommand) {
 
 //        Проверяем, что команда вызвана без аргументов
@@ -250,7 +250,7 @@ public class CliRunner {
         return value == null ? "-" : value;
     }
 
-//    Команда exp_show - показать информацию по одному эксперименту
+    //    Команда exp_show - показать информацию по одному эксперименту
     private void handleExperimentShow(ParsedCommand parsedCommand) {
 
 //        Вызывает метод parse..(), чтобы достать и валидировать ID
@@ -320,7 +320,7 @@ public class CliRunner {
         out.println("Experiment updated.");
     }
 
-//    Команда run_add - добавить прогон эксперимента (интерактивно)
+    //    Команда run_add - добавить прогон эксперимента (интерактивно)
     private void handleRunAdd(ParsedCommand parsedCommand) {
 //         Получение и проверка experimentId через парсер
         long experimentId = parseRequiredLongArgument(parsedCommand, "run_add", "experiment id");
@@ -335,7 +335,7 @@ public class CliRunner {
         out.println("Run created with id " + run.getId());
     }
 
-//    Форматированный вывод списка прогонов
+    //    Форматированный вывод списка прогонов
     private String formatRunLine(Run run) {
         return run.getId()
                 + " | "
@@ -343,7 +343,7 @@ public class CliRunner {
                 + " | operator - " + run.getOperatorName();
     }
 
-//    Команда run_list - показать список прогонов
+    //    Команда run_list - показать список прогонов
     private void handleRunList(ParsedCommand parsedCommand) {
 //        Через парсер берет experimentId, получает эксперимент и его прогоны через сервисы
         long experimentId = parseRequiredLongArgument(parsedCommand, "run_list", "experiment id");
@@ -363,7 +363,7 @@ public class CliRunner {
         }
     }
 
-//    Команда run_show - показать информацию по одному run
+    //    Команда run_show - показать информацию по одному run
     private void handleRunShow(ParsedCommand parsedCommand) {
 
 //        Через парсер достаёт и валидирует id
@@ -411,7 +411,7 @@ public class CliRunner {
         }
     }
 
-//    Команда res_add - добавить результат прогона
+    //    Команда res_add - добавить результат прогона
     private void handleResultAdd(ParsedCommand parsedCommand) {
 //        Через парсер берёт id прогона
         long runId = parseRequiredLongArgument(parsedCommand, "res_add", "run id");
@@ -470,7 +470,7 @@ public class CliRunner {
         throw new ValidationException(label + " must be one of: pH, Temperature, Concentration.");
     }
 
-//    Форматированный вывод списка результатов
+    //    Форматированный вывод списка результатов
     private String formatResultLine(RunResult result) {
         return result.getId()
                 + " | "
@@ -480,7 +480,7 @@ public class CliRunner {
                 + " | comment - " + formatNullableValue(result.getComment());
     }
 
-//    Команда res_list - показать список результатов
+    //    Команда res_list - показать список результатов
     private void handleResultList(ParsedCommand parsedCommand) {
 //        Через парсер берёт runId и param, находит run
         ResultListRequest request = parseResultListRequest(parsedCommand);
