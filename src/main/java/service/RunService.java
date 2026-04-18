@@ -1,5 +1,6 @@
 package service;
 
+import domain.Experiment;
 import domain.Run;
 import validation.ValidationException;
 import java.util.Collection;
@@ -68,5 +69,25 @@ public class RunService {
         return runs.values().stream()
                 .filter(run -> run.getExperimentId() == experimentId)
                 .toList();
+    }
+
+    public void loadFromList(Collection<Run> runs){
+        this.runs.clear(); //Очистка текущей колекции
+        for (Run run : runs){ //Заполнение колекции новыми объектами
+            this.runs.put(run.getId(), run);
+        }
+        // Обновляем nextId, для этого создаем поток из колекции где из значений ID находим max, возвращается объект, если колекция пустая 0L  или настоящий максимум
+        long maxId = runs.stream().mapToLong(Run::getId).max().orElse(0L);
+        this.nextId = maxId + 1; //Новый счетчик для генерации ID
+    }
+
+
+    public void replaceData (RunService other){
+        //Чистим содержимое TreeMap
+        this.runs.clear();
+        // Копируем данные из переданного файла и заполняем (копируя) TreeMap временного сервиса
+        this.runs.putAll(other.runs);
+        //Копируем счетчик nextId, чтобы не было конфликтов при добавлении новых результатов
+        this.nextId = other.nextId;
     }
 }

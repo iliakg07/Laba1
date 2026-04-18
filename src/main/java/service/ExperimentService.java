@@ -52,4 +52,24 @@ public class ExperimentService {
     public Collection<Experiment> list() {
         return List.copyOf(experiments.values());
     }
+
+    public void loadFromList(Collection<Experiment> experiments){
+        this.experiments.clear(); //Очистка текущей колекции
+        for (Experiment exp : experiments){ //Заполнение колекции новыми объектами
+            this.experiments.put(exp.getId(), exp);
+        }
+        // Обновляем nextId, для этого создаем поток из колекции где из значений ID находим max, возвращается объект, если колекция пустая 0L  или настоящий максимум
+        long maxId = experiments.stream().mapToLong(Experiment::getId).max().orElse(0L);
+        this.nextId = maxId + 1; //Новый счетчик для генерации ID
+    }
+
+
+    public void replaceData (ExperimentService other){
+        //Чистим содержимое TreeMap
+        this.experiments.clear();
+        // Копируем данные из переданного файла и заполняем (копируя) TreeMap временного сервиса
+        this.experiments.putAll(other.experiments);
+        //Копируем счетчик nextId, чтобы не было конфликтов при добавлении новых результатов
+        this.nextId = other.nextId;
+    }
 }
