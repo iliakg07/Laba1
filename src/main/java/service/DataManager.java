@@ -1,66 +1,67 @@
 package service;
 
-import storage.DataContainer;
-import storage.JsonDataValidator;
+import domain.Experiment;
+import domain.Run;
+import domain.RunResult;
+import storage.DataSnapshot;
 import storage.JsonFileStorage;
-import validation.ValidationException;
+import storage.SnapshotMapper;
+import storage.SnapshotValidator;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.file.Path;
+import java.util.List;
 
+// ===== 3 ЭТАП: JSON =====
+// Главный класс сохранения и загрузки.
 public class DataManager {
     private final ExperimentService experimentService;
     private final RunService runService;
-    private final RunResultService runResultService;
+    private final RunResultService resultService;
 
-    private final JsonFileStorage fileStorage;
-    private final JsonDataValidator dataValidator;
+    private final JsonFileStorage storage;
+    private final SnapshotMapper mapper;
+    private final SnapshotValidator validator;
 
-    public DataManager(ExperimentService experimentService, RunService runService, RunResultService runResultService){
+    public DataManager(ExperimentService experimentService,
+                       RunService runService,
+                       RunResultService resultService) {
         this.experimentService = experimentService;
         this.runService = runService;
-        this.runResultService = runResultService;
-        this.fileStorage = new JsonFileStorage();
-        this.dataValidator = new JsonDataValidator();
-    }
-//Создем метод который сохраняет данные в файл по указанному пути, выбрасывает исключения IOException
-    public void saveToFile(String path)
-        throws IOException{
-
-        //Берем эксперемент из сервиса возвращаем лист, чтобы получить копию,устанавливаем
-        DataContainer container = new DataContainer();
-        container.setExperiments(new ArrayList<>(experimentService.list()));
-        container.setRuns(new ArrayList<>(runService.list()));
-        container.setRunResults(new ArrayList<>(runResultService.list()));
-
-        //Превращаем контейнер в JSON и записываем в файл
-        fileStorage.save(container, path);
+        this.resultService = resultService;
+        this.storage = new JsonFileStorage();
+        this.mapper = new SnapshotMapper();
+        this.validator = new SnapshotValidator();
     }
 
-    //Создаем метод который загружает данные из файла, также выбрасывает IOException, ValidationException
-    public void loadFromFile(String path)
-        throws IOException, ValidationException{
+    public void saveToFile(String path) throws IOException {
+        DataSnapshot snapshot = mapper.toSnapshot(
+                experimentService.snapshot(),
+                runService.snapshot(),
+                resultService.snapshot()
+        );
 
-        //Загружаем контейнер из файла
-        DataContainer container = fileStorage.load(path);
+        storage.save(Path.of(path), snapshot);
+    }
 
-        //Проверяем целостность данных, если что то не так выбросит ошибку
-        dataValidator.validate(container);
+    public void loadFromFile(String path) throws IOException {
+        DataSnapshot snapshot = storage.load(Path.of(path));
+        validator.validate(snapshot);
 
-        //Создаем временные сервисы и наполняем их загруженными данными
-        ExperimentService tempExpService = new ExperimentService();
-        RunService tempRunService = new RunService(tempExpService);
+        List<Experiment> experiments = mapper.toExperiments(snapshot);
+        List<Run> runs = mapper.toRuns(snapshot);
+        List<RunResult> results = mapper.toRunResults(snapshot);
+
+        ExperimentService tempExperimentService = new ExperimentService();
+        RunService tempRunService = new RunService(tempExperimentService);
         RunResultService tempResultService = new RunResultService(tempRunService);
 
-        //Загружаем данные напрямую через публичные методы сервисов
-        tempExpService.loadFromList(container.getExperiments());
-        tempRunService.loadFromList(container.getRuns());
-        tempResultService.loadFromList(container.getRunResults());
+        tempExperimentService.loadRestored(experiments);
+        tempRunService.loadRestored(runs);
+        tempResultService.loadRestored(results);
 
-        //Если все успешно заменяем оригинальные коллекции
-         experimentService.replaceData(tempExpService);
-         runService.replaceData(tempRunService);
-         runResultService.replaceData(tempResultService);
+        experimentService.loadRestored(tempExperimentService.snapshot());
+        runService.loadRestored(tempRunService.snapshot());
+        resultService.loadRestored(tempResultService.snapshot());
     }
-
 }

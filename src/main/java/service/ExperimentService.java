@@ -2,16 +2,16 @@ package service;
 
 import domain.Experiment;
 import validation.ValidationException;
-import java.util.Collection;
-import java.util.List;
-import java.util.TreeMap;
+
+import java.util.*;
 
 public class ExperimentService {
 
-//    Хранилище экспериментов - ключ = id, значение = сам объект
+    //    Хранилище экспериментов - ключ = id, значение = сам объект
     private final TreeMap<Long, Experiment> experiments = new TreeMap<>();
-//    Счётчик id - ответственность сервиса, хранится в нём
+    //    Счётчик id - ответственность сервиса, хранится в нём
     private long nextId = 1;
+
     private long generateNextId() {
         return nextId++;
     }
@@ -47,29 +47,34 @@ public class ExperimentService {
         }
         return exp;
     }
+    // ===== 3 ЭТАП: JSON =====
+    // Отдаёт копию коллекции для сохранения.
+    public List<Experiment> snapshot() {
+        return new ArrayList<>(experiments.values());
+    }
+    // ===== 3 ЭТАП: JSON =====
+    // Загружает восстановленные объекты и обновляет nextId.
+    public void loadRestored(List<Experiment> restoredExperiments) {
+        Map<Long, Experiment> loadedExperiments = new TreeMap<>();
+        long maxId = 0;
 
-//    Возвращаем копию значений, чтобы внешний код не работал с внутренней коллекцией напрямую
+        for (Experiment experiment : restoredExperiments) {
+            if (loadedExperiments.put(experiment.getId(), experiment) != null) {
+                throw new ValidationException("Duplicate experiment id: " + experiment.getId());
+            }
+            maxId = Math.max(maxId, experiment.getId());
+        }
+
+        experiments.clear();
+        experiments.putAll(loadedExperiments);
+        nextId = maxId + 1;
+    }
+
     public Collection<Experiment> list() {
         return List.copyOf(experiments.values());
     }
 
-    public void loadFromList(Collection<Experiment> experiments){
-        this.experiments.clear(); //Очистка текущей колекции
-        for (Experiment exp : experiments){ //Заполнение колекции новыми объектами
-            this.experiments.put(exp.getId(), exp);
-        }
-        // Обновляем nextId, для этого создаем поток из колекции где из значений ID находим max, возвращается объект, если колекция пустая 0L  или настоящий максимум
-        long maxId = experiments.stream().mapToLong(Experiment::getId).max().orElse(0L);
-        this.nextId = maxId + 1; //Новый счетчик для генерации ID
-    }
-
-
-    public void replaceData (ExperimentService other){
-        //Чистим содержимое TreeMap
-        this.experiments.clear();
-        // Копируем данные из переданного файла и заполняем (копируя) TreeMap временного сервиса
-        this.experiments.putAll(other.experiments);
-        //Копируем счетчик nextId, чтобы не было конфликтов при добавлении новых результатов
-        this.nextId = other.nextId;
-    }
 }
+
+
+
