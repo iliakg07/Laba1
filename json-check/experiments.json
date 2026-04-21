@@ -1,0 +1,19 @@
+{
+  "experiments" : [ {
+    "id" : 77,
+    "name" : "ilia",
+    "description" : "hot",
+    "ownerUsername" : "max",
+    "createdAt" : "2026-04-21T16:07:55.756773900Z",
+    "updatedAt" : "2026-04-21T16:07:55.756773900Z"
+  }, {
+    "id" : 999999,
+    "name" : "ilia1",
+    "description" : "mom",
+    "ownerUsername" : "int",
+    "createdAt" : "2026-04-21T16:08:38.204226300Z",
+    "updatedAt" : "2026-04-21T16:08:38.204226300Z"
+  } ],
+  "runs" : [ ],
+  "runResults" : [ ]
+}

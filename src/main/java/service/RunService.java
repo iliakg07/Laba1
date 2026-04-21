@@ -1,18 +1,16 @@
 package service;
 
-import domain.Experiment;
 import domain.Run;
 import validation.ValidationException;
-import java.util.Collection;
-import java.util.List;
-import java.util.TreeMap;
+
+import java.util.*;
 
 public class RunService {
-//    Ключ - id прогона
+    //    Ключ - id прогона
     private final TreeMap<Long, Run> runs = new TreeMap<>();
-//    Создаём для проверки того, что прогон создается только для существующего эксперимента
+    //    Создаём для проверки того, что прогон создается только для существующего эксперимента
     private final ExperimentService experimentService;
-//    Локальный счётчик ID, генерация происходит в сервисе
+    //    Локальный счётчик ID, генерация происходит в сервисе
     private long nextId = 1;
 
     public RunService(ExperimentService experimentService) {
@@ -70,24 +68,28 @@ public class RunService {
                 .filter(run -> run.getExperimentId() == experimentId)
                 .toList();
     }
-
-    public void loadFromList(Collection<Run> runs){
-        this.runs.clear(); //Очистка текущей колекции
-        for (Run run : runs){ //Заполнение колекции новыми объектами
-            this.runs.put(run.getId(), run);
-        }
-        // Обновляем nextId, для этого создаем поток из колекции где из значений ID находим max, возвращается объект, если колекция пустая 0L  или настоящий максимум
-        long maxId = runs.stream().mapToLong(Run::getId).max().orElse(0L);
-        this.nextId = maxId + 1; //Новый счетчик для генерации ID
+    // ===== 3 ЭТАП: JSON =====
+    public List<Run> snapshot() {
+        return new ArrayList<>(runs.values());
     }
 
+    // ===== 3 ЭТАП: JSON =====
+    public void loadRestored(List<Run> restoredRuns) {
+        Map<Long, Run> loadedRuns = new TreeMap<>();
+        long maxId = 0;
 
-    public void replaceData (RunService other){
-        //Чистим содержимое TreeMap
-        this.runs.clear();
-        // Копируем данные из переданного файла и заполняем (копируя) TreeMap временного сервиса
-        this.runs.putAll(other.runs);
-        //Копируем счетчик nextId, чтобы не было конфликтов при добавлении новых результатов
-        this.nextId = other.nextId;
+        for (Run run : restoredRuns) {
+            experimentService.getById(run.getExperimentId());
+
+            if (loadedRuns.put(run.getId(), run) != null) {
+                throw new ValidationException("Duplicate run id: " + run.getId());
+            }
+
+            maxId = Math.max(maxId, run.getId());
+        }
+
+        runs.clear();
+        runs.putAll(loadedRuns);
+        nextId = maxId + 1;
     }
 }
