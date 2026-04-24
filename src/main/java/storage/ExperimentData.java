@@ -1,5 +1,6 @@
 package storage;
 
+//Удобное хранение эксперемнтов в удобном формате для JSON
 public class ExperimentData {
     private Long id;
     private String name;
@@ -11,8 +12,7 @@ public class ExperimentData {
     public ExperimentData() {
     }
 
-    public ExperimentData(Long id, String name, String description,
-                          String ownerUsername, String createdAt, String updatedAt) {
+    public ExperimentData(Long id, String name, String description, String ownerUsername, String createdAt, String updatedAt) {
         this.id = id;
         this.name = name;
         this.description = description;

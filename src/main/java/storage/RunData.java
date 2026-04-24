@@ -1,5 +1,6 @@
 package storage;
 
+//Удобное хранение прогонов в удобном формате для JSON
 public class RunData {
     private Long id;
     private Long experimentId;

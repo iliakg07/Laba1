@@ -1,5 +1,6 @@
 package storage;
 
+//Удобное хранение результатов прогонов в удобном формате для JSON
 public class RunResultData {
     private Long id;
     private Long runId;

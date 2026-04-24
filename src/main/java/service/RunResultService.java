@@ -67,26 +67,28 @@ public class RunResultService {
                 .filter(result -> result.getRunId() == runId)
                 .toList();
     }
-    // ===== 3 ЭТАП: JSON =====
+    // 3 ЭТАП: JSON
+    // Возвращаем копию коллекции для сохранения
     public List<RunResult> snapshot() {
         return new ArrayList<>(results.values());
     }
 
-    // ===== 3 ЭТАП: JSON =====
+    // 3 ЭТАП: JSON
+    // Метод загружает восстановленные объекты и обновляет nextId
     public void loadRestored(List<RunResult> restoredResults) {
-        Map<Long, RunResult> loadedResults = new TreeMap<>();
+        Map<Long, RunResult> loadedResults = new TreeMap<>();//Создаем временное хранилище куда будем складывать загруженные результаты прогона
         long maxId = 0;
 
-        for (RunResult result : restoredResults) {
+        for (RunResult result : restoredResults) {//Проходим по всем результатам прогонов и проверяем что ссылаемся на существующий прогон
             runService.getById(result.getRunId());
 
-            if (loadedResults.put(result.getId(), result) != null) {
+            if (loadedResults.put(result.getId(), result) != null) {//Если уже что то лежало под таким ID ошибка
                 throw new ValidationException("Duplicate run result id: " + result.getId());
             }
 
-            maxId = Math.max(maxId, result.getId());
+            maxId = Math.max(maxId, result.getId());//Обновляем max ID
         }
-
+//Очищаем коллецию сервиса и загружаем новые данные с правильным ID
         results.clear();
         results.putAll(loadedResults);
         nextId = maxId + 1;

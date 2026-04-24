@@ -38,6 +38,10 @@ public class ExperimentService {
         experiment.update(name, description, ownerUsername);
         return experiment;
     }
+    //Копия эксперементов
+    public Collection<Experiment> list() {
+        return List.copyOf(experiments.values());
+    }
 
     public Experiment getById(long id) {
         Experiment exp = experiments.get(id);
@@ -47,31 +51,27 @@ public class ExperimentService {
         }
         return exp;
     }
-    // ===== 3 ЭТАП: JSON =====
-    // Отдаёт копию коллекции для сохранения.
+    // 3 ЭТАП: JSON
+    // Возвращаем копию коллекции для сохранения
     public List<Experiment> snapshot() {
         return new ArrayList<>(experiments.values());
     }
-    // ===== 3 ЭТАП: JSON =====
-    // Загружает восстановленные объекты и обновляет nextId.
+    // 3 ЭТАП: JSON
+    // Метод загружает восстановленные объекты и обновляет nextId
     public void loadRestored(List<Experiment> restoredExperiments) {
-        Map<Long, Experiment> loadedExperiments = new TreeMap<>();
+        Map<Long, Experiment> loadedExperiments = new TreeMap<>();//Создаем временное хранилище куда будем складывать загруженные эксперементы
         long maxId = 0;
 
-        for (Experiment experiment : restoredExperiments) {
+        for (Experiment experiment : restoredExperiments) {//Проходим по всем эксперементам проверяем что ID не повторяются, если что выбрасываем ошибку
             if (loadedExperiments.put(experiment.getId(), experiment) != null) {
                 throw new ValidationException("Duplicate experiment id: " + experiment.getId());
             }
-            maxId = Math.max(maxId, experiment.getId());
+            maxId = Math.max(maxId, experiment.getId());//Обновляем max ID
         }
-
+//Очищаем коллецию сервиса и загружаем новые данные с правильным ID
         experiments.clear();
         experiments.putAll(loadedExperiments);
         nextId = maxId + 1;
-    }
-
-    public Collection<Experiment> list() {
-        return List.copyOf(experiments.values());
     }
 
 }

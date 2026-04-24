@@ -23,8 +23,8 @@ public class CliRunner {
     private final RunService runService;
     private final RunResultService runResultService;
 
-    // ===== 3 ЭТАП: JSON =====
-    // DataManager отвечает за сохранение и загрузку всех коллекций.
+    //  3 ЭТАП: JSON
+    // DataManager отвечает за сохранение и загрузку всех коллекций
     private final DataManager dataManager;
     private String currentFilePath;
 
@@ -50,8 +50,8 @@ public class CliRunner {
         this.dataManager = new DataManager(experimentService, runService, runResultService);
         this.currentFilePath = initialFilePath;
 
-        // ===== 3 ЭТАП: JSON =====
-        // Если путь передали при запуске, программа пробует загрузить файл сразу.
+        // 3 ЭТАП: JSON
+        // Если путь передали при запуске, программа пробует загрузить файл сразу
         if (initialFilePath != null && !initialFilePath.isBlank()) {
             try {
                 dataManager.loadFromFile(initialFilePath);
@@ -94,7 +94,7 @@ public class CliRunner {
             switch (parsedCommand.name()) {
 //                Перебираем команды и вызываем соответствующий метод
                 case "help" -> printHelp();
-                // ===== 3 ЭТАП: JSON =====
+                // 3 ЭТАП: JSON
                 case "save" -> handleSave(parsedCommand);
                 case "load" -> handleLoad(parsedCommand);
                 case "exit" -> handleExit();
@@ -154,7 +154,7 @@ public class CliRunner {
         out.println("res_add <runId> - add a result for run");
         out.println("res_list <runId> [--param PARAM] - show results for run");
         out.println("exp_summary <id> - show summary for experiment");
-        // ===== 3 ЭТАП: JSON =====
+        // 3 ЭТАП: JSON
         out.println("save <path> - save all data to JSON file");
         out.println("load <path> - load data from JSON file");
         out.println("exit - stop the program");
@@ -166,42 +166,6 @@ public class CliRunner {
         out.println("CLI stopped.");
     }
 
-    // ===== 3 ЭТАП: JSON =====
-    private void handleSave(ParsedCommand command) {
-        String path = extractSingleArgument(command, "save");
-
-        try {
-            dataManager.saveToFile(path);
-            currentFilePath = path;
-            out.println("Data saved to " + path);
-        } catch (IOException e) {
-            throw new ValidationException("Failed to save file: " + e.getMessage());
-        }
-    }
-
-    // ===== 3 ЭТАП: JSON =====
-    private void handleLoad(ParsedCommand command) {
-        String path = extractSingleArgument(command, "load");
-
-        try {
-            dataManager.loadFromFile(path);
-            currentFilePath = path;
-            out.println("Data loaded from " + path);
-        } catch (IOException e) {
-            throw new ValidationException("Failed to read file: " + e.getMessage());
-        } catch (ValidationException e) {
-            throw new ValidationException("Invalid file content: " + e.getMessage());
-        }
-    }
-
-    // ===== 3 ЭТАП: JSON =====
-    private String extractSingleArgument(ParsedCommand command, String commandName) {
-        if (command.arguments.isEmpty()) {
-            throw new ValidationException(commandName + " requires a file path");
-        }
-
-        return command.arguments;
-    }
 
     //    Обеспечиваем вывод команды без ошибок, так как ее запуск происходит без ввода аргументов.
 //    Кидает исключение, если введём команду с каким-то аргументом (типа exp_add test)
@@ -650,6 +614,46 @@ public class CliRunner {
     }
 
     private record ParsedCommand(String name, String arguments) {
+    }
+
+    // 3 ЭТАП: JSON
+    //Метод сохранение данных в JSON, если что то не так выбрасываем ошибку
+    private void handleSave(ParsedCommand command) {
+        String path = extractSingleArgument(command, "save");
+
+        try {
+            dataManager.saveToFile(path);
+            currentFilePath = path;
+            out.println("Data saved to " + path);
+        } catch (IOException e) {
+            throw new ValidationException("Failed to save file: " + e.getMessage());
+        }
+    }
+
+    // ===== 3 ЭТАП: JSON =====
+    //Метод для сохраннения данных из JSON, если что то не так выбрасываем ошибку
+    private void handleLoad(ParsedCommand command) {
+        String path = extractSingleArgument(command, "load");
+
+        try {
+            dataManager.loadFromFile(path);
+            currentFilePath = path;
+            out.println("Data loaded from " + path);
+        } catch (IOException e) {
+            throw new ValidationException("Failed to read file: " + e.getMessage());
+        } catch (ValidationException e) {
+            throw new ValidationException("Invalid file content: " + e.getMessage());
+        }
+    }
+
+    // ===== 3 ЭТАП: JSON =====
+    //Метод проверяющий что путь передан и возвращет этот же путь, если пути нет ошибка
+    private String extractSingleArgument(ParsedCommand command, String commandName) {
+        if (command.arguments.isEmpty()) {
+            throw new ValidationException(commandName + " requires a file path");
+        }
+
+        return command.arguments;
     }
 }
 

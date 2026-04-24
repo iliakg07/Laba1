@@ -23,8 +23,7 @@ public final class Experiment {
     }
 
 
-    private Experiment(long id, String name, String description, String ownerUsername,
-                       Instant createdAt, Instant updatedAt) {
+    private Experiment(long id, String name, String description, String ownerUsername, Instant createdAt, Instant updatedAt) {
         validateId(id);
         validateName(name);
         validateDescription(description);
@@ -115,18 +114,21 @@ public final class Experiment {
     public Instant getUpdatedAt() {
         return updatedAt;
     }
-    // ===== 3 ЭТАП: JSON =====
+    //3 ЭТАП: JSON
+    //Проверка коректонсти времени
     private static void validateTimestamps(Instant createdAt, Instant updatedAt) {
-        if (createdAt == null) throw new ValidationException("Experiment createdAt can't be null");
-        if (updatedAt == null) throw new ValidationException("Experiment updatedAt can't be null");
+        if (createdAt == null)
+            throw new ValidationException("Experiment createdAt can't be null");
+        if (updatedAt == null)
+            throw new ValidationException("Experiment updatedAt can't be null");
         if (updatedAt.isBefore(createdAt)) {
             throw new ValidationException("Experiment updatedAt can't be before createdAt");
         }
     }
 
-    // ===== 3 ЭТАП: JSON =====
-    public static Experiment restore(long id, String name, String description,
-                                     String ownerUsername, Instant createdAt, Instant updatedAt) {
+    // 3 ЭТАП: JSON
+    //Метод для востановления объекта из JSON
+    public static Experiment restore(long id, String name, String description, String ownerUsername, Instant createdAt, Instant updatedAt) {
         return new Experiment(id, name, description, ownerUsername, createdAt, updatedAt);
     }
 

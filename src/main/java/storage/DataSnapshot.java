@@ -2,6 +2,7 @@ package storage;
 
 import java.util.List;
 
+//Создаем хранилище всех списков для дальнейшего сохранения и загрузки
 public class DataSnapshot {
     private List<ExperimentData> experiments;
     private List<RunData> runs;
